@@ -1,0 +1,878 @@
+/* The root is a selector that targets the top-level element of a document.
+This it the best way to declare global variable used with var().
+Every property that starts with -- is a custom property */
+:root {
+    --bg-primary: #070b14;
+    --bg-secondary: #0d1424;
+    --surface: rgba(255, 255, 255, 0.05);
+    --surface-hover: rgba(255, 255, 255, 0.09);
+    --border: rgba(255, 255, 255, 0.09);
+
+    --text-primary: #f5f7fb;
+    --text-muted: #93a1b8;
+
+    --accent-cyan: #4fd8ff;
+    --accent-green: #34e89e;
+    --accent-pink: #ff5d8f;
+    /* Linear gradient is ad image generated*/
+    --gradient-brand: linear-gradient(120deg, var(--accent-cyan), var(--accent-green));
+    --gradient-warm: linear-gradient(120deg, var(--accent-pink), var(--accent-cyan));
+
+    --font-display: 'Space Grotesk', 'Montserrat', sans-serif;
+    --font-body: 'Inter', sans-serif;
+
+    --header-height: 76px;
+}
+
+/* Universal selector applied to all elements */
+* {
+    box-sizing: border-box;
+    /* In this case width and height properties include padding, border or margin */
+}
+
+/* define the scrolling when is triggered by a navigation.
+e.g. <a href="#"> */
+html {
+    scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+}
+
+body {
+    margin: 0;
+    background: var(--bg-primary); /* Define the background color */
+    color: var(--text-primary); /* Define the foregrond color */
+    font-family: var(--font-body);
+    line-height: 1.6; /* Define the height of a line box. Used to separate text line */
+    overflow-x: hidden;
+}
+
+img {
+    max-width: 100%;
+    display: block; /* display an image as a block element starting a new line */
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+/* =================================================================
+   Header & Navigazione
+   ================================================================= */
+
+header {
+    position: sticky; /* Positioned according to the normal flow. It switches between absolute and relative */
+    top: 0;
+    z-index: 100;
+
+    height: var(--header-height);
+    /* Used to create a 1D flexible layout */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    /* clamp is used to define range between two value */
+    padding: 0 clamp(1.25rem, 4vw, 3rem);
+
+    background: rgba(7, 11, 20, 0.6);
+    /* Used to blur the background */
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+
+    border-bottom: 1px solid var(--border);
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: var(--font-display);
+    font-weight: 1000;
+    font-size: 1.15rem;
+    letter-spacing: 0.07em;
+}
+
+nav ul {
+    display: flex;
+    align-items: center;
+    gap: clamp(1rem, 3vw, 2.25rem);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+nav a {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    transition: color 0.2s ease;
+    position: relative;
+}
+
+/* Create a pseudo-element as inline box that is the child of the selected element */
+nav a:not(.btn-nav)::after {
+    content: '';
+    /* Positioned relative to its closest text box */
+    position: absolute;
+    left: 0;
+    bottom: -6px;
+    width: 0;
+    height: 2px;
+    background: var(--gradient-brand);
+    transition: width 0.25s ease;
+}
+
+/* Used to select the element when moving over it */
+nav a:not(.btn-nav):hover {
+    color: var(--text-primary);
+}
+
+nav a:not(.btn-nav):hover::after {
+    width: 100%;
+}
+
+nav a.btn-nav {
+    color: var(--bg-primary);
+    background: var(--gradient-brand);
+    padding: 0.55rem 1.15rem;
+    border-radius: 999px;
+    font-weight: 600;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+nav a.btn-nav:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px -8px rgba(79, 216, 255, 0.55);
+}
+
+/* =================================================================
+   Responsive
+   ================================================================= */
+
+@media (max-width: 640px) {
+    nav ul {
+        gap: 1rem;
+    }
+
+    nav a:not(.btn-nav) {
+        display: none;
+    }
+}
+
+/* ====================================================
+        Button to return to the previous page
+ ======================================================*/
+header .btn-back {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    font-weight: 600;
+    font-size: 1.2rem;
+    line-height: 1;
+    color: var(--text-primary);
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+header .btn-back:hover {
+    color: var(--accent-cyan);
+    background-color: var(--surface-hover);
+    border-color: rgba(79, 216, 255, 0.4);
+    transform: translateX(-3px);
+}
+
+/* Used for tab key navigation */
+header .btn-back:focus-visible {
+    outline: 2px solid var(--accent-cyan);
+    outline-offset: 2px;
+}
+
+/* =================================================================
+    Main section
+   ================================================================= */
+
+main {
+    display: block;
+}
+
+.hero {
+    position: relative;
+    min-height: calc(100svh - var(--header-height));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 3rem 1.5rem;
+    overflow: hidden;
+    background:
+        radial-gradient(60% 50% at 50% 0%, rgba(79, 216, 255, 0.16), transparent 70%),
+        radial-gradient(50% 40% at 85% 100%, rgba(255, 93, 143, 0.12), transparent 70%),
+        var(--bg-primary);
+}
+
+#blocks-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 46rem;
+}
+
+.eyebrow {
+    display: inline-block;
+    margin: 0 0 1rem;
+    padding: 0.35rem 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent-cyan);
+}
+
+h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: clamp(3rem, 11vw, 7.5rem);
+    line-height: 0.95;
+    margin: 0;
+    letter-spacing: -0.02em;
+    background: var(--gradient-brand);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    position: relative;
+    filter: drop-shadow(0 0 40px rgba(79, 216, 255, 0.25));
+}
+
+h1::before {
+    content: attr(data-text);
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: none;
+    color: rgba(79, 216, 255, 0.35);
+    -webkit-text-fill-color: rgba(79, 216, 255, 0.35);
+    filter: blur(22px);
+    transform: translateY(10%) scaleY(0.7);
+    -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.8) 100%);
+    mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.8) 100%);
+}
+
+.tagline {
+    margin: 1.5rem auto 0;
+    max-width: 34rem;
+    color: var(--text-muted);
+    font-size: clamp(1rem, 1.6vw, 1.15rem);
+}
+
+.cta-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2.25rem;
+}
+
+.scroll-cue {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 26px;
+    height: 42px;
+    border: 2px solid var(--border);
+    border-radius: 999px;
+    z-index: 2;
+}
+
+.scroll-cue span {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    width: 4px;
+    height: 8px;
+    margin-left: -2px;
+    border-radius: 999px;
+    background: var(--accent-cyan);
+    animation: scroll-cue 1.6s ease-in-out infinite;
+}
+
+@keyframes scroll-cue {
+    0% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    70% {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateY(0);
+    }
+}
+
+/* =================================================================
+   Motion preference
+   ================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+    .scroll-cue span {
+        animation: none;
+    }
+}
+
+/* =================================================================
+   Bottoni riutilizzabili (hero, dialog, ...)
+   ================================================================= */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.9rem 1.75rem;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.btn-primary {
+    color: var(--bg-primary);
+    background: var(--gradient-brand);
+    box-shadow: 0 12px 30px -10px rgba(52, 232, 158, 0.45);
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 16px 34px -8px rgba(52, 232, 158, 0.6);
+}
+
+.btn-secondary {
+    color: var(--text-primary);
+    background: var(--surface);
+    border: 1px solid var(--border);
+}
+
+.btn-secondary:hover {
+    background: var(--surface-hover);
+    transform: translateY(-3px);
+}
+
+/* =================================================================
+   Popup Nuova Partita
+   ================================================================= */
+
+dialog#game-settings {
+    width: min(28rem, 90vw);
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+dialog#game-settings::backdrop {
+    background: rgba(7, 11, 20, 0.75);
+    backdrop-filter: blur(4px);
+}
+
+.game-settings-form {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding: 2rem;
+}
+
+.game-settings-form h2 {
+    font-family: var(--font-display);
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.dialog-sub {
+    margin: -0.75rem 0 0;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.dialog-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 2rem;
+    height: 2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color 0.2s ease, background 0.2s ease;
+}
+
+.dialog-close:hover {
+    color: var(--text-primary);
+    background: var(--surface-hover);
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.form-group input[type="text"] {
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.form-group input[type="text"]:focus {
+    border-color: var(--accent-cyan);
+    background: var(--surface-hover);
+}
+
+.difficulty-group {
+    padding: 0;
+    border: none;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.difficulty-group legend {
+    padding: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.difficulty-options {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.difficulty-option {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    font-weight: 500;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.difficulty-option:has(input:checked) {
+    border-color: var(--accent-cyan);
+    background: var(--surface-hover);
+}
+
+.difficulty-option input {
+    accent-color: var(--accent-cyan);
+}
+
+.form-error {
+    margin: 0;
+    padding: 0.6rem 0.9rem;
+    border-radius: 10px;
+    background: rgba(255, 93, 143, 0.12);
+    border: 1px solid rgba(255, 93, 143, 0.4);
+    color: var(--accent-pink);
+    font-size: 0.85rem;
+}
+
+.dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+/* =================================================================
+   Popup Game Over
+   ================================================================= */
+
+dialog#game-over {
+    width: min(28rem, 90vw);
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+dialog#game-over::backdrop {
+    background: rgba(7, 11, 20, 0.75);
+    backdrop-filter: blur(4px);
+}
+
+.game-over-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding: 2rem;
+}
+
+.game-over-content h2 {
+    font-family: var(--font-display);
+    margin: 0;
+    font-size: 1.5rem;
+    color: var(--accent-pink);
+}
+
+.game-over-score {
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.game-over-score strong {
+    color: var(--accent-cyan);
+}
+
+/* =================================================================
+   Come si gioca
+   ================================================================= */
+
+.how-to {
+    max-width: 72rem;
+    margin: 0 auto;
+    padding: clamp(4rem, 8vw, 7rem) 1.5rem;
+    text-align: center;
+}
+
+.how-to h2 {
+    font-family: var(--font-display);
+    font-size: clamp(1.9rem, 4vw, 2.75rem);
+    margin: 0 0 0.75rem;
+}
+
+.section-sub {
+    color: var(--text-muted);
+    margin: 0 0 3rem;
+}
+
+.cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 1.5rem;
+    text-align: left;
+}
+
+.card {
+    padding: 2rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+}
+
+.card:hover {
+    transform: translateY(-6px);
+    border-color: rgba(79, 216, 255, 0.4);
+    background: var(--surface-hover);
+}
+
+.card-icon {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.card h3 {
+    font-family: var(--font-display);
+    margin: 0 0 0.5rem;
+    font-size: 1.15rem;
+}
+
+.card p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+/* ================================================
+        Scoreboard
+    =============================================== */
+.scoreboard {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    align-content: center;
+    min-height: 100vh;
+    padding: clamp(4rem, 8vw, 6rem) 1.5rem 4rem;
+    gap: 2.5rem;
+}
+
+#users-scoreboard {
+    width: 100%;
+    max-width: 40rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.scoreboard-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.9rem 1.25rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    font-family: var(--font-body);
+    opacity: 0;
+    transform: translateY(10px);
+    animation: row-in 0.35s ease forwards;
+    transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.scoreboard-row:hover {
+    transform: translateY(-3px);
+    border-color: rgba(79, 216, 255, 0.4);
+    background: var(--surface-hover);
+}
+
+@keyframes row-in {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.scoreboard-row .posizione {
+    width: 2.25rem;
+    flex-shrink: 0;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.1rem;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.scoreboard-row .avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--gradient-brand);
+    color: var(--bg-primary);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.scoreboard-row .nome {
+    flex: 1;
+    font-weight: 500;
+}
+
+.scoreboard-row .punti {
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--accent-cyan);
+}
+
+/* Evidenzia il podio */
+.scoreboard-row.rank-1 {
+    border-color: rgba(255, 215, 0, 0.5);
+    background: linear-gradient(120deg, rgba(255, 215, 0, 0.12), var(--surface));
+}
+
+.scoreboard-row.rank-2 {
+    border-color: rgba(192, 192, 192, 0.5);
+    background: linear-gradient(120deg, rgba(192, 192, 192, 0.1), var(--surface));
+}
+
+.scoreboard-row.rank-3 {
+    border-color: rgba(205, 127, 50, 0.5);
+    background: linear-gradient(120deg, rgba(205, 127, 50, 0.12), var(--surface));
+}
+
+.scoreboard-empty {
+    color: var(--text-muted);
+    text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .scoreboard-row {
+        opacity: 1;
+        transform: none;
+        animation: none;
+    }
+}
+
+/* =================================================================
+   Footer
+   ================================================================= */
+
+footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 2rem clamp(1.25rem, 4vw, 3rem);
+    border-top: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.footer-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.footer-note {
+    margin: 0;
+}
+
+/* ================================================
+        Gameboard
+    =============================================== */
+
+.score-section {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    padding: clamp(2rem, 6vw, 3rem) 1.5rem 0;
+}
+
+.level-badge {
+    margin: 0;
+    padding: 0.3rem 1rem;
+    font-size: 0.8rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+}
+
+/* Il badge del punteggio riusa il ritmo dell'eyebrow/pill,
+   ma sovrascrive l'h1 "hero" (gradiente enorme) con una
+   variante compatta in accent-cyan, come i punti in classifica */
+.score-section h1 {
+    margin: 0;
+    padding: 0.65rem 2rem;
+    font-size: clamp(1.5rem, 4vw, 2.25rem);
+    letter-spacing: 0.04em;
+    background: var(--surface);
+    background-clip: border-box;
+    -webkit-background-clip: border-box;
+    color: var(--accent-cyan);
+    -webkit-text-fill-color: var(--accent-cyan);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    filter: none;
+}
+
+.score-section h1::before {
+    content: none;
+}
+
+.game-section {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    min-height: calc(100svh - var(--header-height));
+    padding: clamp(1.5rem, 4vw, 2.5rem) clamp(1.25rem, 4vw, 3rem) clamp(2rem, 4vw, 3rem);
+}
+
+.gameboard {
+    display: block;
+    width: min(100%, 72rem);
+    flex: 1 1 0;
+    aspect-ratio: var(--aspect, 3);
+    min-height: 22rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    box-shadow: 0 20px 45px -20px rgba(0, 0, 0, 0.5);
+}
+
+.words-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    width: min(100%, 72rem);
+}
+
+.words-form input[type="text"] {
+    flex: 1 1 12rem;
+    padding: 0.9rem 1.25rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.words-form input[type="text"]:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.words-form input[type="text"]:focus {
+    border-color: var(--accent-cyan);
+    background: var(--surface-hover);
+}

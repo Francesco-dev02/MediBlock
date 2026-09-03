@@ -1,0 +1,16 @@
+export const WORDS = ["TACHICARDIA", 
+    "STETOSCOPIO", 
+    "SIRINGA", 
+    "BISTURI", 
+    "DIAGNOSI",
+    "FEBBRE",
+    "ANTIBIOTICO", 
+    "RADIOGRAFIA",
+    "VACCINO",
+    "PLASMA", 
+    "SUTURA",
+    "EMOGLOBINA",
+    "ANESTESIA",
+    "INFUSIONE", 
+    "CUORE"
+]

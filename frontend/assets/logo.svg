@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-labelledby="logoTitle">
+  <title id="logoTitle">Logo BMI</title>
+  <defs>
+    <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4fd8ff"/>
+      <stop offset="100%" stop-color="#34e89e"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#logoGrad)"/>
+  <path d="M32 14 L32 50 M14 32 L50 32" stroke="#0a0f1c" stroke-width="8" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,21 @@
+
+export const USERS = [{username: "Marco", pt: 1000},
+            {username: "Mario", pt: 1240},
+            {username: "Luigi", pt: 1000},
+            {username: "Marica", pt: 800},
+            {username: "Luca", pt: 750},
+            {username: "Giovanni", pt: 500},
+            {username: "Umberto", pt: 760},
+            {username: "Denise", pt: 900},
+            {username: "Beatrice", pt: 880},
+            {username: "Justin", pt: 908},
+            {username: "Federico", pt: 605},
+            {username: "Pino", pt: 202},
+            {username: "Lello", pt: 810},
+            {username: "Manolo", pt: 765},
+            {username: "Martina", pt: 100},
+            {username: "Giuseppe", pt: 440},
+            {username: "Alessio", pt: 345},
+            {username: "Leonardo", pt: 1500},
+            {username: "Francesco", pt: 870}
+]

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <title>MediBlock</title>
+    <link rel="icon" href="/frontend/assets/logo.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> 
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+    <header>
+        <div class="brand">
+            <button class="btn-back" id="go-back">←</button>
+            <img src="./assets/logo.svg" alt="" width="32" height="32"> MediBlock
+        </div>
+    </header>
+    <main>
+        <section class="score-section">
+            <h1>0 pt.</h1>
+        </section>
+        <section class="game-section">
+            <canvas class="gameboard"></canvas>
+            <form class="words-form" id="words-form">
+                <input type="text" name="word-input" placeholder="Scrivi una parola..." autocomplete="off">
+            </form>
+        </section>
+    </main>
+
+    <!-- Popup mostrato quando la torre supera la linea di guardia -->
+    <dialog id="game-over">
+        <div class="game-over-content">
+            <h2>Game Over</h2>
+            <p class="dialog-sub">La torre ha superato il livello di guardia.</p>
+            <p class="game-over-score">Punteggio finale: <strong id="final-score">0</strong> pt.</p>
+            <div class="dialog-actions">
+                <a href="./index.html" class="btn btn-secondary">🏠 Torna alla Home</a>
+                <button type="button" class="btn btn-primary" id="retry-btn">↻ Rigioca</button>
+            </div>
+        </div>
+    </dialog>
+
+    <footer>
+        <div class="footer-brand">
+            <img src="./assets/logo.svg" alt="Logo BMI" width="28" height="28">
+            <span>Realizzato da BMI</span>
+        </div>
+    </footer>
+    <script type="module" src="./js/gameboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8"> <!-- Charset declaration -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Specify the display on mobile -->
+    <title>MediBlock</title>
+    <!-- Description not necessary right now. 
+    It will be usefull if the site will be published on web.
+    This because the description appear in the browser below the page title -->
+    <meta name="description" content="MediBlock: indovina l'associazione giusta e fai crollare i blocchi prima che raggiungano il tetto. Un word game a tema medico.">
+    <!-- LINK TAG DEFINE A RELATIONSHIP BETWEEN THE DOCUMENT AND AN EXTERNAL RESOURCE-->
+    <link rel="icon" href="./assets/logo.svg" type="image/svg+xml"> <!-- Favicon appear in the browser tab near the page title -->
+    
+    <!-- preconnet are useful to reduce the loading time. It allow to establish a connection with external resources.-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> <!-- cross origin is necessary because the server send binary file not just css -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+
+<body>
+
+    <!-- Header & Navigation bar -->
+    <header>
+        <div class="brand">
+            <img src="./assets/logo.svg" alt="" width="32" height="32"> MediBlock
+        </div>
+
+        <nav>
+            <ul>
+                <li><a href="#come-si-gioca">Come si gioca</a></li>
+                <li><a href="scoreboard.html">Classifica</a></li>
+                <li><a href="" class="btn-nav trigger-new-game">Nuova Partita</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Hero section -->
+        <section class="hero">
+            <!-- Canvas tag is used to display graphics and draw animations -->
+            <!-- aria-hidden is used to hide the element from screen reader -->
+            <canvas id="blocks-canvas" aria-hidden="true"></canvas>
+
+            <div class="hero-content">
+                <p class="eyebrow">Un word game a tema medico</p>
+                <h1 data-text="MediBlock">MediBlock</h1>
+                <p class="tagline">
+                    Osserva la parola, trova l'associazione giusta e fai crollare
+                    il blocco prima che raggiunga il tetto della corsia.
+                </p>
+
+                <div class="cta-group">
+                    <a href="#" class="btn btn-primary trigger-new-game">▶ Nuova Partita</a>
+                    <a href="./scoreboard.html" class="btn btn-secondary">🏆 Classifica</a>
+                </div>
+            </div>
+
+            <a href="#come-si-gioca" class="scroll-cue" aria-label="Scorri per saperne di più">
+                <span></span>
+            </a>
+        </section>
+
+        <!-- Pop up shown to insert the username and choose the difficult of the game -->
+        <dialog id="game-settings">
+            <!-- novalidate: native form validation are unreliable inside a <dialog>,
+                 so validation is handled entirely in JS (see new-game-dialog.js) -->
+            <form id="new-game-form" class="game-settings-form" novalidate>
+                <button type="button" class="dialog-close" commandfor="game-settings" command="close" aria-label="Chiudi">✕</button>
+
+                <h2>Nuova Partita</h2>
+                <p class="dialog-sub">Inserisci il tuo nome e scegli la difficoltà per iniziare.</p>
+
+                <div class="form-group">
+                    <label for="username">Nome utente</label>
+                    <input type="text" id="username" name="username" placeholder="Es. Marco">
+                </div>
+
+                <fieldset class="difficulty-group">
+                    <legend>Difficoltà</legend>
+                    <div class="difficulty-options">
+                        <label class="difficulty-option">
+                            <input type="radio" name="difficulty" value="FACILE" checked>
+                            <span>🟢 Facile</span>
+                        </label>
+
+                        <label class="difficulty-option">
+                            <input type="radio" name="difficulty" value="MEDIO">
+                            <span>🟡 Medio</span>
+                        </label>
+                    </div>
+                </fieldset>
+
+                <p class="form-error" id="form-error" role="alert" hidden></p>
+
+                <div class="dialog-actions">
+                    <button type="button" class="btn btn-secondary" commandfor="game-settings" command="close">Annulla</button>
+                    <button type="submit" class="btn btn-primary" id="start-game-btn">▶ Avvia Partita</button>
+                </div>
+            </form>
+        </dialog>
+        <!-- Sezione: regole del gioco -->
+        <section id="come-si-gioca" class="how-to">
+            <h2>Come si gioca</h2>
+            <p class="section-sub">Tre passi, un solo obiettivo: non far traboccare la corsia.</p>
+
+            <div class="cards">
+                <article class="card">
+                    <div class="card-icon">🩺</div>
+                    <h3>1. Osserva</h3>
+                    <p>Ogni blocco che scende porta con sé un termine medico: un sintomo, uno strumento, una diagnosi.</p>
+                </article>
+
+                <article class="card">
+                    <div class="card-icon">💡</div>
+                    <h3>2. Associa</h3>
+                    <p>Scrivi la parola più collegata per significato. Più l'intuizione è azzeccata, più punti ottieni.</p>
+                </article>
+
+                <article class="card">
+                    <div class="card-icon">💥</div>
+                    <h3>3. Fai crollare</h3>
+                    <p>L'associazione corretta abbatte il blocco. Resisti più a lungo possibile e scala la classifica.</p>
+                </article>
+            </div>
+        </section>
+
+    </main>
+
+
+    <footer>
+        <div class="footer-brand">
+            <img src="./assets/logo.svg" alt="Logo BMI" width="28" height="28">
+            <span>Realizzato da BMI</span>
+        </div>
+    </footer>
+    <!-- Module type allow the import of others module -->
+    <script type="module" src="./js/index.js"></script>
+</body>
+</html>

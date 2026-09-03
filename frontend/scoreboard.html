@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediBlock</title>
+    
+    <link rel="icon" href="/frontend/assets/logo.svg" type="image/svg+xml">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> 
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Foglio di stile unico, con i commenti originali di ogni sezione -->
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+
+<body>
+
+    <header>
+        <div class="brand">
+            <button class="btn-back" id="go-back">←</button>
+            <img src="./assets/logo.svg" alt="" width="32" height="32"> MediBlock
+        </div>
+    </header>
+
+    <main>
+        <section class="scoreboard">
+            <h1>Classifica</h1>
+            <div id="users-scoreboard"></div>
+        </section>
+    </main>
+
+
+    <footer>
+        <div class="footer-brand">
+            <img src="./assets/logo.svg" alt="Logo BMI" width="28" height="28">
+            <span>Realizzato da BMI</span>
+        </div>
+    </footer>
+
+    <script type="module" src="./js/scoreboard.js"></script>
+</body>
+
+</html>
