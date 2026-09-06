@@ -46,6 +46,15 @@ export class GridBoard {
         }
     }
 
+    // Nulls out block's current footprint without touching #blocks -
+    // shared by removeBlock() and applyGravity(), which needs to clear a
+    // block from its old spot before re-occupying it at a new one.
+    #clear(block) {
+        for (let y = block.row; y < block.row + block.height; y++) {
+            for (let x = block.col; x < block.col + block.width; x++) this.#grid[y][x] = null;
+        }
+    }
+
     getBlocks(){
         return Object.values(this.#blocks);
     }
@@ -59,6 +68,61 @@ export class GridBoard {
     }
 
 
+    
+    removeBlock(block){
+        this.#clear(block);
+        delete this.#blocks[block.id];
+    }
 
+    
+    applyGravity(){
+        const moved = [];
+
+        // First position the element below 
+        const blocks = this.getBlocks().sort((a, b) => b.row - a.row);
+
+        for (const block of blocks) {
+            let landingRow = block.row;
+
+            for (let y = block.row + 1; y + block.height <= this.#rows; y++) {
+                const newBottomRow = y + block.height - 1;
+                let rowIsFree = true;
+                for (let x = block.col; x < block.col + block.width; x++) {
+                    if (this.#grid[newBottomRow][x] !== null) { rowIsFree = false; break; }
+                }
+                if (!rowIsFree) break;
+                landingRow = y;
+            }
+
+            if (landingRow === block.row) continue;
+
+            this.#clear(block);
+            block.row = landingRow;
+            this.#occupy(block);
+            moved.push(block);
+        }
+        return moved;
+    }
+
+   
+    getNeighbors(block){
+        const neighbors = new Map();
+
+        const consider = (col, row) => {
+            const neighbor = this.getBlockAt(col, row);
+            if (neighbor && neighbor.id !== block.id) neighbors.set(neighbor.id, neighbor);
+        };
+
+        for (let x = block.col; x < block.col + block.width; x++) {
+            consider(x, block.row - 1);            // above
+            consider(x, block.row + block.height); // below
+        }
+        for (let y = block.row; y < block.row + block.height; y++) {
+            consider(block.col - 1, y);             // left
+            consider(block.col + block.width, y);   // right
+        }
+
+        return [...neighbors.values()];
+    }
 
 }
