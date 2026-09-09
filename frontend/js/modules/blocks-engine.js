@@ -2,7 +2,7 @@ import { getRandomColor } from "./random-color.js"
 import { WORDS } from "./mock-blocks.js"
 import { randomExtraction } from "./random-extraction.js"
 import { shuffleArray } from "./shuffle-array.js"
-import { GridBoard } from "./gridBoard.js"
+import { GridBoard } from "./grid-board.js"
 
 export function startGame(){
     const canvas = document.querySelector('.gameboard')

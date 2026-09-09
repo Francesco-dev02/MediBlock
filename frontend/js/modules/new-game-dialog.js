@@ -16,7 +16,8 @@ export function initNewGameDialog() {
             event.preventDefault();
             // restore the form's default value
             newGameForm.reset();
-
+            startGameBtn.disabled = false;
+            startGameBtn.textContent = "▶ Avvia Partita";
             formError.hidden = true;
             dialog.showModal();
         })
@@ -49,5 +50,8 @@ export function initNewGameDialog() {
 
     })
 
+    window.addEventListener('pagehide', () => {
+        dialog.close();
+    });
     
 }

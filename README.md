@@ -1,4 +1,11 @@
 # MediBlock
+
+## Requisiti 
+- Docker engine
+
 ## Frontend
-Il frontend per essere visualizzato richiede un web server che fornisca le pagine statiche. Attraverso visual studio code si può installare l'estensione Live Server che consente la corretta visualizzazione delle pagine HTML. 
-L'entrypoint dell'applicazione è la pagina *index.html*
+Le pagine statiche del frontend vengono adesso servite utilizzando *nginx* configurato come web server. 
+
+Per poter fruire del servizio è necessario, da terminale, eseguire il comando **docker compose up --build**. (N.B. Il comando deve essere essere eseguito dalla stessa cartella in cui è presente il file docker-compose.yml). 
+
+Il sito sarà disponibile in: http://localhost:8080
