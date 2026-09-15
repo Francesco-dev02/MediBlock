@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from fastapi.concurrency import run_in_threadpool
 
 from app.schemas.words import WordsIn, WordsOut, WordSimilarity
+from utils.manage_users import update_score
 from app.services.embedding_service import embedding_service
 
 router = APIRouter()

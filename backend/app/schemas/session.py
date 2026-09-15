@@ -9,3 +9,9 @@ class SessionStartIn(BaseModel):
 
 class SessionStartOut(BaseModel):
     words: list[str]
+
+class SessionEndIn(BaseModel):
+    score: int
+
+class SessionEndOut(BaseModel):
+    top_scorer: list[tuple[str, int]]

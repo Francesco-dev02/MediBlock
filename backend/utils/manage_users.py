@@ -1,54 +1,49 @@
 import sqlite3
 
-conn = sqlite3.connect("players.db")
+conn = sqlite3.connect("games.db")
 cursor = conn.cursor()
 
-# cursor.execute("CREATE TABLE IF NOT EXISTS players(id INTEGER PRIMARY KEY, username TEXT, score INTEGER)")
-# conn.commit()
+cursor.execute("CREATE TABLE IF NOT EXISTS games(id INTEGER PRIMARY KEY, username TEXT, score INTEGER, difficulty TEXT)")
+conn.commit()
 
-def add_user(username: str):
-    cursor.execute("SELECT 1 FROM players WHERE username = ?", (username,))
-    already_in_use = cursor.fetchone()
-    if already_in_use:
-        print(f"Attenzione: lo username '{username}' risulta essere già in uso da un altro giocatore!")
-    else:
-        values = (username, 0)
-        cursor.execute("INSERT INTO players (username, score) VALUES (?, ?)", values)
-        conn.commit()
-        print(f"Successo: il giocatore '{username}' è stato registrato correttamente!")
-
-def update_score(username: str, score: int):
-    print(f"Il giocatore '{username}' ha totalizzato {score} punti.")
-    actual_score = get_score(username)
-    print(f"Il giocatore '{username}' era in possesso di {actual_score[0]} punti.")
-    query = """
-    UPDATE players
-    SET score = score + ?
-    WHERE username = ?
-    """
-    cursor.execute(query, (score, username))
+def add_user(username: str, difficulty: str):
+    values = (username, 0, difficulty)
+    cursor.execute("INSERT INTO games (username, score, difficulty) VALUES (?, ?, ?)", values)
     conn.commit()
-    final_score = actual_score[0] + score
-    print(f"Il giocatore '{username}' ha raggiunto {final_score} punti!")
+    print(f"Successo: il giocatore '{username}' è stato registrato correttamente!")
+
+def update_score(username: str, score: int, difficulty: str):
+    print(f"Il giocatore '{username}' ha totalizzato {score} punti.")
+    query = """
+    UPDATE games
+    SET score = ?
+    WHERE id = (
+    SELECT MAX(id) 
+    FROM games 
+    WHERE username = ? AND difficulty = ?)
+    """
+    cursor.execute(query, (score, username, difficulty))
+    conn.commit()
 
 def get_score(username: str):
     query = """
     SELECT score
-    FROM players
+    FROM games
     WHERE username = ?
     """
     cursor.execute(query, (username,))
     actual_score = cursor.fetchone()
     return actual_score
 
-def get_top_scorer(top_k: int = 5):
+def get_top_scorer(difficulty: str, top_k: int = 5):
     query = """
     SELECT username, score
-    FROM players
+    FROM games
+    WHERE difficulty = ?
     ORDER BY score DESC
     LIMIT ?
     """
-    cursor.execute(query, (top_k,))
+    cursor.execute(query, (difficulty, top_k))
     selected_rows = cursor.fetchall()
     print(f"Top-{top_k} scorer: ")
     for posizione, (username, score) in enumerate(selected_rows, start=1):
