@@ -43,11 +43,43 @@ export function initNewGameDialog() {
         startGameBtn.disabled = true;
         startGameBtn.textContent = "Avvio in corso...";
 
-        // setTimeout (not setInterval) so the redirect fires only once,
-        setTimeout(() => {
-            window.location.href = "./gameboard.html";
-        }, 1000)
+        try {
+            const payload = {
+                username: username,
+                difficulty: difficulty.toLowerCase()
+            };
 
+            const response = await fetch('/api/session/start', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                throw new Error('Il server ha risposto con un errore.');
+            }
+
+            const data = await response.json();
+            console.log('Risposta ricevuta dal backend:', data);
+
+            // Save of the backend response in sessionStorage
+            // 'wordsSession' is arbitrary
+            sessionStorage.setItem('wordsSession', JSON.stringify(data.words));
+            // if POST has been successfully completed, redirect to the gameboard page
+            setTimeout(() => {
+                window.location.href = "./gameboard.html";
+            }, 1000);
+
+        } catch (error) {
+            console.error('Errore durante la comunicazione con il backend:', error);
+            // Reset the button and show the error on the form screen
+            startGameBtn.disabled = false;
+            startGameBtn.textContent = "▶ Avvia Partita";
+            formError.textContent = "Impossibile connettersi al server del gioco. Riprova più tardi.";
+            formError.hidden = false;
+        }
     })
 
     window.addEventListener('pagehide', () => {

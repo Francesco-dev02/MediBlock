@@ -5,12 +5,12 @@ from app.api.routes import session, words
 
 app = FastAPI(title="Word Game Backend")
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # aggiorna con l'URL del tuo frontend
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["http://localhost:3000"],  # aggiorna con l'URL del tuo frontend
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
 
 app.include_router(session.router, prefix="/session", tags=["session"])
 app.include_router(words.router, prefix="/words", tags=["words"])

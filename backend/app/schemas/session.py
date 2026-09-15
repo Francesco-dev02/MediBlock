@@ -4,7 +4,7 @@ from typing import Literal
 
 class SessionStartIn(BaseModel):
     username: str
-    difficulty: Literal["facile", "intermedio"]
+    difficulty: Literal["facile", "difficile"]
 
 
 class SessionStartOut(BaseModel):

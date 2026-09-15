@@ -66,8 +66,25 @@ export function startGame(){
 
     let isAnimating = false; // guards against a second submit mid-sequence
 
-    const extractedWords = randomExtraction(WORDS, WORDS_NUMBER)
-    let wordsQueue = shuffleArray(extractedWords.concat(Array(NULL_NUMBER).fill(null)))
+    //const extractedWords = randomExtraction(WORDS, WORDS_NUMBER)
+    // words list from backend
+    const extractedWords = sessionStorage.getItem('wordsSession');
+    let extractedWordsList = []
+    if (extractedWords) {
+        try {
+            // convert text in a real Array JavaScript of strings
+            extractedWordsList = JSON.parse(extractedWords);
+            console.log("Lista di gioco caricata:", extractedWordsList);
+        } catch (e) {
+            console.error("Errore durante il parse di wordsSession:", e);
+            window.location.href = "./index.html";
+            return;
+        } 
+    } else {
+    // if extractedWords is None, return to index page
+        window.location.href = "./index.html";
+    }
+    let wordsQueue = shuffleArray(extractedWordsList.concat(Array(NULL_NUMBER).fill(null)))
 
     // Tracks every word already placed on the board (initial layout plus
     // any checkConsistency() repair), so repairs never hand out a

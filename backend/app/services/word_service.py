@@ -16,7 +16,7 @@ class WordService:
 
     def _load_all_difficulties(self) -> dict[str, list[str]]:
         result = {}
-        for difficulty in ["facile", "intermedio"]:
+        for difficulty in ["facile", "difficile"]:
             file_path = Path(settings.words_data_dir) / f"words_{difficulty}.json"
             with open(file_path, "r", encoding="utf-8") as f:
                 result[difficulty] = json.load(f)
