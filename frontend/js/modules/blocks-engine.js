@@ -3,6 +3,8 @@ import { WORDS } from "./mock-blocks.js"
 import { randomExtraction } from "./random-extraction.js"
 import { shuffleArray } from "./shuffle-array.js"
 import { GridBoard } from "./grid-board.js"
+import { collectRemovalGroup, enforceRemovability } from "./color-graph.js"
+import { tween, easeInQuad, easeInOutQuad, lerpColor } from "./animation.js"
 
 export function startGame(){
     const canvas = document.querySelector('.gameboard')
@@ -43,6 +45,27 @@ export function startGame(){
 
     const WORD_SCORE = 50 // score for every block eliminated
 
+    // Durations for the three post-submit animation phases: a matched group
+    // shrinks away, the board settles, then whatever changed color or gained
+    // a word eases into its new look. Kept short and sequential on purpose -
+    // this is a word game, not a physics demo.
+    const REMOVE_DURATION = 180 // ms, fading + shrinking a cleared block
+    const REMOVE_SHRINK = 0.3   // fraction it shrinks by, fully faded
+    const FALL_DURATION = 240   // ms, settling into the gap left below - fixed
+                                 // regardless of distance, so a big drop reads
+                                 // as one clean settle rather than a slow crawl
+    const MATERIALIZE_DURATION = 260 // ms, color crossfade / word fade-in
+
+    // Transient, purely visual state keyed by block id - never the block's
+    // own data. draw() consults these while a phase is in flight and they're
+    // empty the rest of the time, so a plain draw() outside an animation is
+    // unaffected.
+    const removingBlocks = new Map();     // id -> { progress }
+    const fallingBlocks = new Map();      // id -> { fromRow, progress }
+    const materializingBlocks = new Map(); // id -> { from, to, becameWord, progress }
+
+    let isAnimating = false; // guards against a second submit mid-sequence
+
     const extractedWords = randomExtraction(WORDS, WORDS_NUMBER)
     let wordsQueue = shuffleArray(extractedWords.concat(Array(NULL_NUMBER).fill(null)))
 
@@ -53,10 +76,21 @@ export function startGame(){
     // for running out and reusing one.
     let usedWords = new Set(extractedWords)
 
-    function pickRepairWord(){
+    function pickRepairWord(block){
         const available = WORDS.filter(word => !usedWords.has(word));
         const pool = available.length > 0 ? available : WORDS; // exhausted: allow a repeat rather than getting stuck
-        const word = pool[Math.floor(Math.random() * pool.length)];
+
+        // The block keeps its existing width - it was sized as an empty block,
+        // not for whatever word ends up in it - and computeFontSize() shares
+        // one font size across every word block on the board. A word too wide
+        // for this block would shrink everyone else's text along with it, so
+        // prefer a word that actually fits before considering anything wider.
+        const fitting = pool.filter(word => getBlockWidth(word) <= block.width);
+        const choices = fitting.length > 0
+            ? fitting
+            : [pool.reduce((shortest, word) => word.length < shortest.length ? word : shortest)];
+
+        const word = choices[Math.floor(Math.random() * choices.length)];
         usedWords.add(word);
         return word;
     }
@@ -194,29 +228,62 @@ export function startGame(){
     }
 
     function drawBlock(block) {
-        const y = offsetY + block.row * cellHeight;
+        const removing = removingBlocks.get(block.id);
+        const falling = fallingBlocks.get(block.id);
+        const materializing = materializingBlocks.get(block.id);
+
+        // Falling only ever animates row - gravity is vertical only - so col
+        // and width stay exactly as GridBoard has them.
+        const effectiveRow = falling
+            ? falling.fromRow + (block.row - falling.fromRow) * falling.progress
+            : block.row;
+
+        const y = offsetY + effectiveRow * cellHeight;
         const blockHeight = block.height * cellHeight;
-
-        
         const blockWidth = block.width * cellWidth;
-
         const x = offsetX + block.col * cellWidth;
+
+        const alpha = removing ? 1 - removing.progress : 1;
+        const scale = removing ? 1 - removing.progress * REMOVE_SHRINK : 1;
+        const fillColor = materializing
+            ? lerpColor(materializing.from, materializing.to, materializing.progress)
+            : block.color;
+
+        ctx.save();
+        ctx.globalAlpha = alpha;
+
+        // Shrinking is scaled around the block's own center, not the canvas
+        // origin, so it reads as the block collapsing in on itself.
+        if (scale !== 1) {
+            const cx = x + blockWidth / 2, cy = y + blockHeight / 2;
+            ctx.translate(cx, cy);
+            ctx.scale(scale, scale);
+            ctx.translate(-cx, -cy);
+        }
 
         // Inset the fill by BLOCK_GAP so adjacent blocks show a thin gap
         // between them even though they're logically touching in the grid.
-        ctx.fillStyle = block.color;
-        
+        ctx.fillStyle = fillColor;
+
         tracePath(x + BLOCK_GAP / 2, y + BLOCK_GAP / 2, blockWidth - BLOCK_GAP, blockHeight - BLOCK_GAP, BLOCK_RADIUS);
         ctx.fill();
 
-        if (!block.word) return;
+        if (block.word) {
+            // A block that just gained a word (repaired) fades its text in
+            // rather than having it appear instantly; everything else is
+            // simply at full opacity.
+            const textAlpha = materializing && materializing.becameWord ? materializing.progress : 1;
 
-        // Same size for every block on the board
-        ctx.font = `${blockFontSize}px sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#fff';
-        ctx.fillText(block.word, x + blockWidth / 2, y + blockHeight / 2, blockWidth - TEXT_PADDING * 2);
+            // Same size for every block on the board
+            ctx.font = `${blockFontSize}px sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#fff';
+            ctx.globalAlpha = alpha * textAlpha;
+            ctx.fillText(block.word, x + blockWidth / 2, y + blockHeight / 2, blockWidth - TEXT_PADDING * 2);
+        }
+
+        ctx.restore();
     }
 
     function getBlockWidth(word){
@@ -331,74 +398,110 @@ export function startGame(){
     
     resize()              // computes cellWidth/cellHeight before any block is sized
     gridInitialization()  // needs cellWidth to turn word lengths into cell counts
+    enforceRemovability(grid, { repairBlock }) // inheritedColor()'s no-neighbor branch can mint an unreachable block
     draw()                // render again now that the grid actually has blocks
 
     new ResizeObserver(resize).observe(canvas)
 
     // Removes `block`, then remove every connected empty block that shares the same color
-    // The removing chain follows only empty block. 
+    // The removing chain follows only empty block. That chain lives in
+    // color-graph.js, because enforceRemovability() has to walk the exact same
+    // one to decide which empty blocks are still reachable.
     function removeMatchingGroup(block){
-        const targetColor = block.color;
-        const toRemove = new Map([[block.id, block]]); // create a map id: block
-        const stack = [block];
-
-        // build the chain of element to remove
-        while (stack.length > 0) {
-            const current = stack.pop();
-            for (const neighbor of grid.getNeighbors(current)) {
-                if (toRemove.has(neighbor.id)) continue;
-                if (neighbor.word) continue; // only empty blocks chain onward
-                if (neighbor.color !== targetColor) continue;
-                toRemove.set(neighbor.id, neighbor);
-                stack.push(neighbor);
-            }
-        }
-
-        
-        toRemove.forEach((b) => grid.removeBlock(b));
-        score += toRemove.size * WORD_SCORE
+        const group = collectRemovalGroup(grid, block);
+        group.forEach((b) => grid.removeBlock(b));
+        score += group.length * WORD_SCORE
     }
 
-    // Turns an orphaned empty block into its own word block: fresh random
-    // color plus a word, so it no longer needs a same-color neighbor to
-    // stay valid. Width/row/col are left untouched (repositioning would
-    // cascade into everything gravity just settled) - computeFontSize()
-    // already shrinks the shared font to fit whatever width it has.
+    // Last resort for an empty block that enforceRemovability() can't rescue by
+    // recoloring, because nothing around it leads back to a word. Giving it a
+    // word of its own makes it removable, and makes it something the rest of
+    // its cluster can then recolor toward. Width/row/col are left untouched
+    // (repositioning would cascade into everything gravity just settled) -
+    // computeFontSize() already shrinks the shared font to fit whatever width
+    // it has.
     function repairBlock(block){
-        block.word = pickRepairWord();
+        block.word = pickRepairWord(block);
         block.color = getRandomColor();
         block.colorStreak = 1;
     }
 
-    // check consistency must be applied to all blocks (pervy case on which an empty block doesn't move
-    // while its word neighbor move, losing consistency)
-    function checkConsistency(movedBlocks){
-        let toCheck = movedBlocks;
-
-        while (toCheck.length > 0) {
-            const orphaned = toCheck.filter((block) =>
-                !block.word && !grid.getNeighbors(block).some((n) => n.color === block.color)
-            );
-
-            orphaned.forEach(repairBlock);
-
-            toCheck = orphaned.flatMap((block) => grid.getNeighbors(block).filter((n) => !n.word));
-        }
+    // Fades and shrinks `group` in place, then hands back control so the
+    // caller can actually remove the blocks. They stay in `grid` throughout -
+    // draw() keeps rendering them via removingBlocks - so nothing disappears
+    // before the animation says it should.
+    async function playRemoval(group){
+        group.forEach((b) => removingBlocks.set(b.id, { progress: 0 }));
+        await tween(REMOVE_DURATION, easeInOutQuad, (t) => {
+            group.forEach((b) => { removingBlocks.get(b.id).progress = t; });
+            draw();
+        });
+        group.forEach((b) => removingBlocks.delete(b.id));
     }
 
+    // Settles `moved` blocks from their pre-gravity row into the row
+    // GridBoard already snapped them to. GridBoard mutates block.row
+    // immediately - fromRows is a snapshot taken just before that happened,
+    // so the animation has something to interpolate away from.
+    async function playFall(moved, fromRows){
+        moved.forEach((b) => fallingBlocks.set(b.id, { fromRow: fromRows.get(b.id), progress: 0 }));
+        await tween(FALL_DURATION, easeInQuad, (t) => {
+            moved.forEach((b) => { fallingBlocks.get(b.id).progress = t; });
+            draw();
+        });
+        moved.forEach((b) => fallingBlocks.delete(b.id));
+    }
 
+    // Eases every entry in `changes` ({ id, from, to, becameWord }) from its
+    // old color to its new one. block.color/word are already updated by the
+    // time this runs - it's a purely visual crossfade over the real state.
+    async function playMaterialize(changes){
+        changes.forEach((c) => materializingBlocks.set(c.id, { ...c, progress: 0 }));
+        await tween(MATERIALIZE_DURATION, easeInOutQuad, (t) => {
+            changes.forEach((c) => { materializingBlocks.get(c.id).progress = t; });
+            draw();
+        });
+        changes.forEach((c) => materializingBlocks.delete(c.id));
+    }
 
-    form.addEventListener("submit", (event) => {
+    form.addEventListener("submit", async (event) => {
         event.preventDefault()
+        if (isAnimating) return; // let the current sequence finish first
 
         const wordInput = form.elements["word-input"].value.trim().toUpperCase()
         form.elements["word-input"].value = ""
 
-        const matchedBlock = grid.getBlocks().find((block) => block.word === wordInput); 
+        const matchedBlock = grid.getBlocks().find((block) => block.word === wordInput);
         if (!matchedBlock) return;
-        removeMatchingGroup(matchedBlock);
-        let moved = grid.applyGravity(); // every blocks above the eliminated blocks must fall down
-        checkConsistency(moved)
+
+        isAnimating = true;
+
+        // 1. The matched word and its same-color empty chain fade away.
+        const group = collectRemovalGroup(grid, matchedBlock);
+        await playRemoval(group);
+        group.forEach((b) => grid.removeBlock(b));
+        score += group.length * WORD_SCORE;
+
+        // 2. Everything above the gap falls into place.
+        const rowsBeforeGravity = new Map(grid.getBlocks().map((b) => [b.id, b.row]));
+        const moved = grid.applyGravity();
+        if (moved.length > 0) await playFall(moved, rowsBeforeGravity);
+
+        // 3. Falling can strand empty blocks that lost their way back to a
+        // word - enforceRemovability recolors them (or, failing that, mints
+        // a word) onto a live chain. Capture before/after so it can be
+        // animated the same way as an ordinary recolor.
+        const changes = [];
+        const repairWithAnim = (block) => {
+            const from = block.color;
+            repairBlock(block);
+            changes.push({ id: block.id, from, to: block.color, becameWord: true });
+        };
+        const { recolored } = enforceRemovability(grid, { repairBlock: repairWithAnim });
+        changes.push(...recolored.map((c) => ({ ...c, becameWord: false })));
+        if (changes.length > 0) await playMaterialize(changes);
+
+        isAnimating = false;
         draw();
      })
 
