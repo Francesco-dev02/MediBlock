@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import session, words
+from app.api.routes import session, words, score_board
 
 app = FastAPI(title="Word Game Backend")
 
@@ -14,6 +14,7 @@ app = FastAPI(title="Word Game Backend")
 
 app.include_router(session.router, prefix="/session", tags=["session"])
 app.include_router(words.router, prefix="/words", tags=["words"])
+app.include_router(score_board.router, prefix="/scoreboard", tags=["scoreboard"])
 
 
 @app.get("/")

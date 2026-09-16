@@ -17,7 +17,7 @@ async def start_session(payload: SessionStartIn):
 @router.post("/gameover", response_model=SessionEndOut)
 async def end_game(payload: SessionEndIn):
     difficulty = user_client.get_difficulty()
-    update_score(user_client.get_username(), payload.score, difficulty)
+    await update_score(user_client.get_username(), payload.score, difficulty)
     top_scorer = get_top_scorer(difficulty)
     print(top_scorer)
     return SessionEndOut(top_scorer=top_scorer)

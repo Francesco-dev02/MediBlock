@@ -50,4 +50,15 @@ def get_top_scorer(difficulty: str, top_k: int = 5):
         print(f"{posizione}. {username}: {score} punti")
     return selected_rows
 
+def get_scoreboard():
+    query = """
+    SELECT username, MAX(score) AS max_score, difficulty
+    FROM games
+    GROUP BY username
+    ORDER BY max_score DESC
+    """
+    cursor.execute(query)
+    score_board = cursor.fetchall()
+    return score_board
+
 # conn.close()
