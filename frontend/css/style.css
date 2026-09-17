@@ -474,13 +474,11 @@ dialog#game-settings::backdrop {
     padding: 0;
     border: none;
     margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
 }
 
 .difficulty-group legend {
     padding: 0;
+    margin: 0 0 0.5rem;
     font-size: 0.9rem;
     font-weight: 600;
     color: var(--text-muted);
@@ -646,6 +644,24 @@ dialog#game-over::backdrop {
     min-height: 100vh;
     padding: clamp(4rem, 8vw, 6rem) 1.5rem 4rem;
     gap: 2.5rem;
+}
+
+.scoreboard-filter {
+    display: flex;
+    justify-content: center;
+}
+
+.scoreboard-filter .difficulty-group legend {
+    text-align: center;
+}
+
+.scoreboard-filter .difficulty-options {
+    justify-content: center;
+}
+
+.scoreboard-filter .difficulty-option {
+    flex: 0 0 auto;
+    padding: 0.6rem 1.25rem;
 }
 
 #users-scoreboard {

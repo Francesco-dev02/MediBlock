@@ -27,6 +27,22 @@
     <main>
         <section class="scoreboard">
             <h1>Classifica</h1>
+            <form class="scoreboard-filter">
+                <fieldset class="difficulty-group">
+                    <legend>Seleziona la difficoltà</legend>
+                    <div class="difficulty-options">
+                        <label class="difficulty-option">
+                            <input type="radio" name="difficult-menu" value="facile" checked>
+                            <span>🟢 Facile</span>
+                        </label>
+
+                        <label class="difficulty-option">
+                            <input type="radio" name="difficult-menu" value="difficile">
+                            <span>🔴 Difficile</span>
+                        </label>
+                    </div>
+                </fieldset>
+            </form>
             <div id="users-scoreboard"></div>
         </section>
     </main>

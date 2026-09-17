@@ -7,6 +7,9 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./frontend:/usr/share/nginx/html:ro # by default docker search index.html into /usr/share/nginx/html (thx. https://www.docker.com/blog/how-to-use-the-official-nginx-docker-image/)
+    depends_on:
+      - backend
+
 
   backend:
     build:

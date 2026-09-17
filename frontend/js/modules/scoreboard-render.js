@@ -34,7 +34,7 @@ export function renderScoreboard(container, users) {
 
         const ptsSpan = document.createElement("span");
         ptsSpan.classList.add("punti");
-        ptsSpan.textContent = `${user.pt} pts`;
+        ptsSpan.textContent = `${user.score} pts`;
 
         row.append(posSpan, avatar, nameSpan, ptsSpan);
         container.appendChild(row);
