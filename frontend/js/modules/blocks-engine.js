@@ -56,6 +56,9 @@ export function startGame(){
                                  // as one clean settle rather than a slow crawl
     const MATERIALIZE_DURATION = 260 // ms, color crossfade / word fade-in
 
+    const DIM_DURATION = 800 // ms, fade in/out for the non-matched blocks
+    const DIM_ALPHA = 0.30   // how faint the non-matched blocks get while the match plays
+
     // Transient, purely visual state keyed by block id - never the block's
     // own data. draw() consults these while a phase is in flight and they're
     // empty the rest of the time, so a plain draw() outside an animation is
@@ -63,6 +66,14 @@ export function startGame(){
     const removingBlocks = new Map();     // id -> { progress }
     const fallingBlocks = new Map();      // id -> { fromRow, progress }
     const materializingBlocks = new Map(); // id -> { from, to, becameWord, progress }
+
+    // Dim bracket around the removal phase: every block NOT in the group
+    // that's about to be removed fades down to DIM_ALPHA so the group reads
+    // as the visual focus, then fades back once it's gone. dimExemptIds is
+    // null outside that bracket, so drawBlock's dim check is a no-op the
+    // rest of the time.
+    let dimExemptIds = null; // ids kept at full opacity while a dim is active, or null
+    let dimProgress = 0;     // 0 = normal, 1 = fully dimmed to DIM_ALPHA
 
     let isAnimating = false; // guards against a second submit mid-sequence
 
@@ -158,7 +169,7 @@ export function startGame(){
 
     function draw(){
         ctx.clearRect(0, 0, width, height);
-        drawGrid();
+        // drawGrid();
         blockFontSize = computeFontSize(); // one size for the whole board, recomputed for the current cell size
         grid.getBlocks().forEach((block) => {
             drawBlock(block)
@@ -260,7 +271,10 @@ export function startGame(){
         const blockWidth = block.width * cellWidth;
         const x = offsetX + block.col * cellWidth;
 
-        const alpha = removing ? 1 - removing.progress : 1;
+        const isDimmed = dimExemptIds && !dimExemptIds.has(block.id);
+        const dimAlpha = isDimmed ? 1 - dimProgress * (1 - DIM_ALPHA) : 1;
+
+        const alpha = (removing ? 1 - removing.progress : 1) * dimAlpha;
         const scale = removing ? 1 - removing.progress * REMOVE_SHRINK : 1;
         const fillColor = materializing
             ? lerpColor(materializing.from, materializing.to, materializing.progress)
@@ -420,16 +434,6 @@ export function startGame(){
 
     new ResizeObserver(resize).observe(canvas)
 
-    // Removes `block`, then remove every connected empty block that shares the same color
-    // The removing chain follows only empty block. That chain lives in
-    // color-graph.js, because enforceRemovability() has to walk the exact same
-    // one to decide which empty blocks are still reachable.
-    function removeMatchingGroup(block){
-        const group = collectRemovalGroup(grid, block);
-        group.forEach((b) => grid.removeBlock(b));
-        score += group.length * WORD_SCORE
-    }
-
     // Last resort for an empty block that enforceRemovability() can't rescue by
     // recoloring, because nothing around it leads back to a word. Giving it a
     // word of its own makes it removable, and makes it something the rest of
@@ -441,6 +445,21 @@ export function startGame(){
         block.word = pickRepairWord(block);
         block.color = getRandomColor();
         block.colorStreak = 1;
+    }
+
+    // Fades every block except `exemptGroup` down to DIM_ALPHA (dim: true)
+    // or back up to full opacity (dim: false), so the group about to be
+    // removed reads as the visual focus while it plays.
+    async function playDim(exemptGroup, dim){
+        // Create a set containing the id of the block to remove 
+        dimExemptIds = new Set(exemptGroup.map((b) => b.id));
+        // dim Progress 
+        const from = dimProgress, to = dim ? 1 : 0;
+        await tween(DIM_DURATION, easeInOutQuad, (t) => {
+            dimProgress = from + (to - from) * t;
+            draw();
+        });
+        if (!dim) dimExemptIds = null;
     }
 
     // Fades and shrinks `group` in place, then hands back control so the
@@ -485,19 +504,22 @@ export function startGame(){
         event.preventDefault()
         if (isAnimating) return; // let the current sequence finish first
 
-        const wordInput = form.elements["word-input"].value.trim().toUpperCase()
+        const wordInput = form.elements["word-input"].value.trim().toLowerCase()
         form.elements["word-input"].value = ""
 
-        const matchedBlock = grid.getBlocks().find((block) => block.word === wordInput);
+        const matchedBlock = grid.getBlocks().find((block) => block.word && block.word.toLowerCase() === wordInput);
         if (!matchedBlock) return;
 
         isAnimating = true;
 
-        // 1. The matched word and its same-color empty chain fade away.
+        // 1. Everything but the matched group dims down, the group fades
+        // away, then everything else brightens back up before gravity runs.
         const group = collectRemovalGroup(grid, matchedBlock);
+        await playDim(group, true);
         await playRemoval(group);
         group.forEach((b) => grid.removeBlock(b));
         score += group.length * WORD_SCORE;
+        await playDim(group, false);
 
         // 2. Everything above the gap falls into place.
         const rowsBeforeGravity = new Map(grid.getBlocks().map((b) => [b.id, b.row]));
