@@ -14,11 +14,14 @@ export function startGame(){
     const scoreElement = document.querySelector(".score-section h1")
     const gameSection = canvas.closest('.game-section')
 
+    const progressBar = document.querySelector('.progress-bar');
+
 
     if(!gameSection || !form || !scoreElement) return
 
     let width = 0, height = 0;
     let cellWidth = 0, cellHeight = 0, offsetX = 0, offsetY = 0;
+    let progressBarState = 0;
 
     const PADDING = 14
     const COLS = 96, ROWS = 96;
@@ -89,12 +92,12 @@ export function startGame(){
             console.log("Lista di gioco caricata:", extractedWordsList);
         } catch (e) {
             console.error("Errore durante il parse di wordsSession:", e);
-            window.location.href = "./index.html";
+            // window.location.href = "./index.html";
             return;
         }
     } else {
     // if extractedWords is None, return to index page
-        window.location.href = "./index.html";
+        // window.location.href = "./index.html";
         return;
     }
 
@@ -442,6 +445,27 @@ export function startGame(){
     
     resize()              // computes cellWidth/cellHeight before any block is sized
     gridInitialization()  // needs cellWidth to turn word lengths into cell counts
+    setInterval(async () => {
+        progressBarState += 5;
+        if (progressBarState > 100) { 
+            if (!isAnimating){
+                progressBarState = 0;
+                isAnimating = true;
+                try {
+                    const newBlocks = spawnFallingBlocks(BLOCKS_PER_TURN);
+                    if (newBlocks.length > 0) {
+                        const spawnFromRows = new Map(newBlocks.map((b) => [b.id, -BLOCK_HEIGHT]));
+                        await playFall(newBlocks, spawnFromRows);
+                    }
+                    await checkGridConsistency();
+                } finally {
+                    isAnimating = false;
+                }
+            }
+        }
+        progressBar.style.setProperty('--progress', progressBarState + '%');
+    }, 1000)
+
     enforceRemovability(grid, { repairBlock }) // inheritedColor()'s no-neighbor branch can mint an unreachable block
     draw()                // render again now that the grid actually has blocks
 
@@ -698,6 +722,7 @@ export function startGame(){
             // 5. An arrival can itself strand an empty block - e.g. one landing
             // on the bare floor with nothing underneath to inherit a color from.
             await checkGridConsistency();
+            progressBarState = 0;
         } catch (err) {
             console.error("[blocks-engine] errore durante la sequenza di animazione:", err);
         } finally {

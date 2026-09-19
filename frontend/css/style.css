@@ -841,6 +841,35 @@ footer {
     content: none;
 }
 
+/* Traccia + riempimento del livello di guardia della torre: il colore
+   caldo (accent-pink) riprende quello del dialog di game over, così la
+   barra si legge come lo stesso avviso di "pericolo" prima ancora che
+   scatti il popup. */
+.progress-bar-container {
+    width: min(100%, 72rem);
+    margin: 0 auto;
+    padding: 0 clamp(1.25rem, 4vw, 3rem);
+}
+
+.progress-bar {
+    height: 0.7rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    overflow: hidden;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.progress-bar::before {
+    content: "";
+    display: block;
+    height: 100%;
+    width: var(--progress, 0%);
+    background: var(--gradient-warm);
+    border-radius: inherit;
+    transition: width 0.3s ease;
+}
+
 .game-section {
     position: relative;
     display: flex;
