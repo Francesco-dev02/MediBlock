@@ -117,13 +117,28 @@ export function startGame(){
     // (SESSION_WORD_COUNT in session.py) precisely so there's a same-vocabulary,
     // same-difficulty reserve left over: shuffle once, then split into the
     // board's initial words and the reserve pool repairs/new blocks draw from.
-    const shuffledSessionWords = shuffleArray([...extractedWordsList]);
-    const initialWords = shuffledSessionWords.slice(0, WORDS_NUMBER);
+    // const shuffledSessionWords = shuffleArray([...extractedWordsList]);
+    let availableWords = [...extractedWordsList];
+
+    function getWordsFromPool(count) {
+        const result = [];
+        for (let i = 0; i < count; i++) {
+            if (availableWords.length === 0) {
+                // when the list is empty we reset with the whole list of words shuffled
+                availableWords = shuffleArray([...extractedWordsList]);
+            }
+            result.push(availableWords.shift()); // Rimuove e restituisce la prima parola
+        }
+        return result;
+    }
+
+    const initialWords = getWordsFromPool(WORDS_NUMBER);
+    // const initialWords = shuffledSessionWords.slice(0, WORDS_NUMBER);
     // A session that came back with too few words to leave a reserve just
     // reuses the board's own words rather than leaving the pool empty.
-    const wordPool = shuffledSessionWords.length > WORDS_NUMBER
-        ? shuffledSessionWords.slice(WORDS_NUMBER)
-        : initialWords;
+    //const wordPool = shuffledSessionWords.length > WORDS_NUMBER
+    //    ? shuffledSessionWords.slice(WORDS_NUMBER)
+    //    : initialWords;
 
     let wordsQueue = shuffleArray(initialWords.concat(Array(NULL_NUMBER).fill(null)))
 
@@ -132,23 +147,37 @@ export function startGame(){
     // duplicate that's still in play.
     let usedWords = new Set(initialWords)
 
-    function pickRepairWord(block){
-        const available = wordPool.filter(word => !usedWords.has(word));
-        const pool = available.length > 0 ? available : wordPool; // exhausted: allow a repeat rather than getting stuck
+    // function pickRepairWord(block){
+    //     const available = wordPool.filter(word => !usedWords.has(word));
+    //     const pool = available.length > 0 ? available : wordPool; // exhausted: allow a repeat rather than getting stuck
 
-        // The block keeps its existing width - it was sized as an empty block,
-        // not for whatever word ends up in it - and computeFontSize() shares
-        // one font size across every word block on the board. A word too wide
-        // for this block would shrink everyone else's text along with it, so
-        // prefer a word that actually fits before considering anything wider.
-        const fitting = pool.filter(word => getBlockWidth(word) <= block.width);
-        const choices = fitting.length > 0
-            ? fitting
-            : [pool.reduce((shortest, word) => word.length < shortest.length ? word : shortest)];
+    //     // The block keeps its existing width - it was sized as an empty block,
+    //     // not for whatever word ends up in it - and computeFontSize() shares
+    //     // one font size across every word block on the board. A word too wide
+    //     // for this block would shrink everyone else's text along with it, so
+    //     // prefer a word that actually fits before considering anything wider.
+    //     const fitting = pool.filter(word => getBlockWidth(word) <= block.width);
+    //     const choices = fitting.length > 0
+    //         ? fitting
+    //         : [pool.reduce((shortest, word) => word.length < shortest.length ? word : shortest)];
 
-        const word = choices[Math.floor(Math.random() * choices.length)];
-        usedWords.add(word);
-        return word;
+    //     const word = choices[Math.floor(Math.random() * choices.length)];
+    //     usedWords.add(word);
+    //     return word;
+    // }
+
+    function pickRepairWord(block) {
+        if (availableWords.length === 0) {
+            availableWords = shuffleArray([...extractedWordsList]);
+        }
+        const fittingIndex = availableWords.findIndex(word => getBlockWidth(word) <= block.width);
+        let chosenWord;
+        if (fittingIndex !== -1) {
+            chosenWord = availableWords.splice(fittingIndex, 1)[0];
+        } else {
+            chosenWord = availableWords.shift();
+        }
+        return chosenWord;
     }
 
 
@@ -531,18 +560,34 @@ export function startGame(){
     // pickRepairWord()'s fit-filtering so a spawned block can be constrained
     // to a maximum width (e.g. the zone it has to land in) the same way a
     // repaired block is constrained to the width it already has.
-    function pickNewWord(maxWidth = COLS){
-        const available = wordPool.filter(word => !usedWords.has(word));
-        const pool = available.length > 0 ? available : wordPool;
+    // function pickNewWord(maxWidth = COLS){
+    //     const available = wordPool.filter(word => !usedWords.has(word));
+    //     const pool = available.length > 0 ? available : wordPool;
 
-        const fitting = pool.filter(word => getBlockWidth(word) <= maxWidth);
-        const choices = fitting.length > 0
-            ? fitting
-            : [pool.reduce((shortest, word) => word.length < shortest.length ? word : shortest)];
+    //     const fitting = pool.filter(word => getBlockWidth(word) <= maxWidth);
+    //     const choices = fitting.length > 0
+    //         ? fitting
+    //         : [pool.reduce((shortest, word) => word.length < shortest.length ? word : shortest)];
 
-        const word = choices[Math.floor(Math.random() * choices.length)];
-        usedWords.add(word);
-        return word;
+    //     const word = choices[Math.floor(Math.random() * choices.length)];
+    //    usedWords.add(word);
+    //    return word;
+    //}
+
+    function pickNewWord(maxWidth = COLS) {
+        if (availableWords.length === 0) {
+            availableWords = shuffleArray([...extractedWordsList]);
+        }
+        // Find the index of the first word which fits with maxWidth
+        const fittingIndex = availableWords.findIndex(word => getBlockWidth(word) <= maxWidth);
+        let chosenWord;
+        if (fittingIndex !== -1) {
+            chosenWord = availableWords.splice(fittingIndex, 1)[0];
+        } else {
+            chosenWord = availableWords.shift();
+        }
+
+        return chosenWord;
     }
 
     // Whether a block-sized span is free to occupy. Above the visible grid

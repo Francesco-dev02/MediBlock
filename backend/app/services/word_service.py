@@ -52,7 +52,7 @@ class WordService:
                 if indices:
                     chosen_index = random.choice(indices)
                     selected.append(pool.pop(chosen_index))
-                    cluster_labels.pop(chosen_index)
+                    cluster_labels = np.delete(cluster_labels, chosen_index)
         return selected
 
 
