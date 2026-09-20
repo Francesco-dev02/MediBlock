@@ -64,6 +64,17 @@ export function startGame(){
     const DIM_DURATION = 800 // ms, fade in/out for the non-matched blocks
     const DIM_ALPHA = 0.30   // how faint the non-matched blocks get while the match plays
 
+    // Feedback shown on a block whose word was typed verbatim (already
+    // guessable as-is, so the fuzzy match is skipped): a red tint plus a
+    // cross scale in, hold so the player actually registers it, then fade
+    // back out. Three sequential tweens rather than one, since the hold
+    // phase has no progress to animate.
+    const NOT_ALLOWED_FADE_IN = 150   // ms, overlay + cross appearing
+    const NOT_ALLOWED_HOLD = 550      // ms, held at full strength
+    const NOT_ALLOWED_FADE_OUT = 250  // ms, overlay + cross disappearing
+    const NOT_ALLOWED_COLOR = '#ff3b30'
+    const NOT_ALLOWED_OVERLAY_ALPHA = 0.35
+
     // Transient, purely visual state keyed by block id - never the block's
     // own data. draw() consults these while a phase is in flight and they're
     // empty the rest of the time, so a plain draw() outside an animation is
@@ -71,6 +82,7 @@ export function startGame(){
     const removingBlocks = new Map();     // id -> { progress }
     const fallingBlocks = new Map();      // id -> { fromRow, progress }
     const materializingBlocks = new Map(); // id -> { from, to, becameWord, progress }
+    const forbiddenBlocks = new Map(); 
 
     // Dim bracket around the removal phase: every block NOT in the group
     // that's about to be removed fades down to DIM_ALPHA so the group reads
@@ -92,12 +104,12 @@ export function startGame(){
             console.log("Lista di gioco caricata:", extractedWordsList);
         } catch (e) {
             console.error("Errore durante il parse di wordsSession:", e);
-            // window.location.href = "./index.html";
+            window.location.href = "./index.html";
             return;
         }
     } else {
     // if extractedWords is None, return to index page
-        // window.location.href = "./index.html";
+        window.location.href = "./index.html";
         return;
     }
 
@@ -328,6 +340,36 @@ export function startGame(){
             ctx.fillStyle = '#fff';
             ctx.globalAlpha = alpha * textAlpha;
             ctx.fillText(block.word, x + blockWidth / 2, y + blockHeight / 2, blockWidth - TEXT_PADDING * 2);
+        }
+
+        const forbidden = forbiddenBlocks.get(block.id);
+        if (forbidden) {
+            const p = forbidden.progress;
+
+            // Red tint over the block, same rounded shape as the fill.
+            ctx.globalAlpha = alpha * p * NOT_ALLOWED_OVERLAY_ALPHA;
+            ctx.fillStyle = NOT_ALLOWED_COLOR;
+            tracePath(x + BLOCK_GAP / 2, y + BLOCK_GAP / 2, blockWidth - BLOCK_GAP, blockHeight - BLOCK_GAP, BLOCK_RADIUS);
+            ctx.fill();
+
+            // Cross centered on the block, popping in slightly as it appears.
+            const cx = x + blockWidth / 2, cy = y + blockHeight / 2;
+            const crossScale = 0.7 + 0.3 * p;
+            const inset = Math.min(blockWidth, blockHeight) * 0.28;
+
+            ctx.globalAlpha = alpha * p;
+            ctx.strokeStyle = NOT_ALLOWED_COLOR;
+            ctx.lineWidth = Math.max(2, Math.min(blockWidth, blockHeight) * 0.12);
+            ctx.lineCap = 'round';
+
+            ctx.translate(cx, cy);
+            ctx.scale(crossScale, crossScale);
+            ctx.beginPath();
+            ctx.moveTo(-blockWidth / 2 + inset, -blockHeight / 2 + inset);
+            ctx.lineTo(blockWidth / 2 - inset, blockHeight / 2 - inset);
+            ctx.moveTo(blockWidth / 2 - inset, -blockHeight / 2 + inset);
+            ctx.lineTo(-blockWidth / 2 + inset, blockHeight / 2 - inset);
+            ctx.stroke();
         }
 
         ctx.restore();
@@ -615,6 +657,26 @@ export function startGame(){
         group.forEach((b) => removingBlocks.delete(b.id));
     }
 
+    // Flashes a red cross over `blocks` (a word typed verbatim, already
+    // guessable as-is) - fades in, holds so it's actually noticed, fades
+    // back out. Mirrors the removal/dim tweens' pattern of driving a
+    // per-block map that drawBlock reads.
+    async function playNotAllowed(blocks){
+        blocks.forEach((b) => forbiddenBlocks.set(b.id, { progress: 0 }));
+
+        await tween(NOT_ALLOWED_FADE_IN, easeInOutQuad, (t) => {
+            blocks.forEach((b) => { forbiddenBlocks.get(b.id).progress = t; });
+            draw();
+        });
+        await new Promise((resolve) => setTimeout(resolve, NOT_ALLOWED_HOLD));
+        await tween(NOT_ALLOWED_FADE_OUT, easeInOutQuad, (t) => {
+            blocks.forEach((b) => { forbiddenBlocks.get(b.id).progress = 1 - t; });
+            draw();
+        });
+
+        blocks.forEach((b) => forbiddenBlocks.delete(b.id));
+    }
+
     // Settles `moved` blocks from their pre-gravity row into the row
     // GridBoard already snapped them to. GridBoard mutates block.row
     // immediately - fromRows is a snapshot taken just before that happened,
@@ -663,14 +725,21 @@ export function startGame(){
         event.preventDefault()
         if (isAnimating) return; // let the current sequence finish first
 
-        const wordInput = form.elements["word-input"].value.trim()
+        const wordInput = form.elements["word-input"].value.trim().toLowerCase()
         form.elements["word-input"].value = ""
         if (!wordInput) return;
 
-        const candidates = grid.getBlocks().filter((block) => block.word).map((block) => block.word);
+        const candidates = grid.getBlocks().filter((block) => block.word).map((block) => block.word.toLowerCase()); // array of word
         if (candidates.length === 0) return;
 
         isAnimating = true;
+
+        if (candidates.includes(wordInput)) {
+            const forbiddenBlock = grid.getBlocks().find((block) => block.word && block.word.toLowerCase() === wordInput);
+            if (forbiddenBlock) await playNotAllowed([forbiddenBlock]);
+            isAnimating = false;
+            return;
+        }
 
         // Everything from here on can throw (a failed fetch, a bug in an
         // animation step) - the finally block is what guarantees isAnimating
