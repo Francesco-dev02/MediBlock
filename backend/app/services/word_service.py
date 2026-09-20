@@ -45,10 +45,14 @@ class WordService:
 
     def _pick_random_per_cluster(self, pool: list[str], cluster_labels: np.ndarray) -> list[str]:
         selected = []
-        for cluster_id in set(cluster_labels):
-            indices = [i for i, label in enumerate(cluster_labels) if label == cluster_id]
-            chosen_index = random.choice(indices)
-            selected.append(pool[chosen_index])
+        while len(pool) > 0:
+            available_clusters = set(cluster_labels)
+            for cluster_id in set(available_clusters):
+                indices = [i for i, label in enumerate(cluster_labels) if label == cluster_id]
+                if indices:
+                    chosen_index = random.choice(indices)
+                    selected.append(pool.pop(chosen_index))
+                    cluster_labels.pop(chosen_index)
         return selected
 
 
