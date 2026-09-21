@@ -924,3 +924,60 @@ footer {
     border-color: var(--accent-cyan);
     background: var(--surface-hover);
 }
+
+/* Pagina di gioco: header, punteggio, barra, canvas, input e footer devono
+   stare tutti nella finestra. La pagina è una colonna alta 100svh e il canvas
+   (flex: 1) prende lo spazio rimasto, restringendosi con la finestra. */
+body:has(.game-section) {
+    height: 100svh;
+    display: flex;
+    flex-direction: column;
+}
+
+body:has(.game-section) main {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Larghezza condivisa da griglia, campo di testo e barra di progresso */
+body:has(.game-section) .gameboard,
+body:has(.game-section) .words-form,
+body:has(.game-section) .progress-bar-container {
+    width: min(100%, 52rem);
+}
+
+body:has(.game-section) main > br {
+    display: none;
+}
+
+body:has(.game-section) .score-section {
+    padding: 0.75rem 1.5rem 0.5rem;
+}
+
+body:has(.game-section) .score-section h1 {
+    padding: 0.35rem 1.5rem;
+}
+
+body:has(.game-section) .game-section {
+    flex: 1;
+    min-height: 0;
+    gap: 0.75rem;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+}
+
+body:has(.game-section) .gameboard {
+    min-height: 8rem;
+}
+
+body:has(.game-section) footer {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+body:has(.game-section) .footer-brand img {
+    width: 32px;
+    height: 32px;
+}

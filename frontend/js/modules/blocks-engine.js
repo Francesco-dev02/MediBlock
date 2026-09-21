@@ -24,7 +24,7 @@ export function startGame(){
     let progressBarState = 0;
 
     const PADDING = 14
-    const COLS = 96, ROWS = 96;
+    const COLS = 96, ROWS = 100; // ROWS is a multiple of BLOCK_HEIGHT so a full tower ends exactly at the top edge
 
     const BLOCK_HEIGHT = 10 // measured as rows occupation
     const MAX_WORD_GAP = 6 // random empty columns left before a word block
@@ -93,6 +93,7 @@ export function startGame(){
     let dimProgress = 0;     // 0 = normal, 1 = fully dimmed to DIM_ALPHA
 
     let isAnimating = false; // guards against a second submit mid-sequence
+    let gameOver = false;    // once true the board is frozen: no more spawns, no more guesses
 
     // words list from backend
     const extractedWords = sessionStorage.getItem('wordsSession');
@@ -281,7 +282,7 @@ export function startGame(){
             if (!block.word) continue;
 
             const maxWidth = block.width * cellWidth - TEXT_PADDING * 2; // available space
-            ctx.font = `${size}px sans-serif`; 
+            ctx.font = `${size}px sans-serif`;
             const textWidth = ctx.measureText(block.word).width; // required space depends on idealFontSize
 
             // Text width scales ~linearly with font size, so this ratio
@@ -517,12 +518,14 @@ export function startGame(){
     resize()              // computes cellWidth/cellHeight before any block is sized
     gridInitialization()  // needs cellWidth to turn word lengths into cell counts
     setInterval(async () => {
+        if (gameOver) return;
         progressBarState += 5;
         if (progressBarState > 100) { 
             if (!isAnimating){
                 progressBarState = 0;
                 isAnimating = true;
                 try {
+                    if (checkGameOver()) return;
                     const newBlocks = spawnFallingBlocks(BLOCKS_PER_TURN);
                     if (newBlocks.length > 0) {
                         const spawnFromRows = new Map(newBlocks.map((b) => [b.id, -BLOCK_HEIGHT]));
@@ -766,9 +769,33 @@ export function startGame(){
         if (changes.length > 0) await playMaterialize(changes);
     }
 
+    // Called right before new blocks are due to arrive: if a block is resting
+    // on row 0 a column has already reached the top edge of the grid, so this
+    // is the iteration that ends the game (freezes the board and shows the
+    // game-over popup). Returns true when the game is over.
+    function checkGameOver(){
+        if (gameOver) return true;
+        if (!grid.getBlocks().some((b) => b.row <= 0)) return false;
+        gameOver = true;
+
+        // Save the final score so it shows up in the scoreboard.
+        fetch('/api/session/gameover', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ score }),
+        }).catch((err) => console.error("[blocks-engine] salvataggio punteggio fallito:", err));
+
+        const dialog = document.getElementById("game-over");
+        if (!dialog) return true;
+        document.getElementById("final-score").textContent = score;
+        document.getElementById("retry-btn")?.addEventListener("click", () => location.reload());
+        dialog.showModal();
+        return true;
+    }
+
     form.addEventListener("submit", async (event) => {
         event.preventDefault()
-        if (isAnimating) return; // let the current sequence finish first
+        if (isAnimating || gameOver) return; // let the current sequence finish first
 
         const wordInput = form.elements["word-input"].value.trim().toLowerCase()
         form.elements["word-input"].value = ""
@@ -826,7 +853,9 @@ export function startGame(){
             // 3. Falling can strand empty blocks that lost their way back to a word.
             await checkGridConsistency();
 
-            // 4. New blocks fall in to replace what was cleared.
+            // 4. New blocks fall in to replace what was cleared - unless the
+            // tower is still at the top of the grid, which ends the game.
+            if (checkGameOver()) return;
             const newBlocks = spawnFallingBlocks(BLOCKS_PER_TURN);
             if (newBlocks.length > 0) {
                 const spawnFromRows = new Map(newBlocks.map((b) => [b.id, -BLOCK_HEIGHT]));
