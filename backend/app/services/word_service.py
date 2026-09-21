@@ -44,6 +44,7 @@ class WordService:
         return fcluster(tree, t=n, criterion="maxclust")
 
     def _pick_random_per_cluster(self, pool: list[str], cluster_labels: np.ndarray) -> list[str]:
+        pool = list(pool) # a copy of pool is required to avoid self._words modification
         selected = []
         while len(pool) > 0:
             available_clusters = set(cluster_labels)
