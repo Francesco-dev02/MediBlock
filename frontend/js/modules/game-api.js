@@ -9,6 +9,7 @@ export async function fetchWords(count) {
 }
 
 export async function fetchBestMatch(word, candidates) {
+    console.log(`Word ${word} sending`)
     const res = await fetch(`${API_BASE}/words/similarity`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -20,5 +21,6 @@ export async function fetchBestMatch(word, candidates) {
         throw new Error("risposta di /words/similarity malformata");
     }
     const best = data.similarities.reduce((a, b) => (b.score > a.score ? b : a));
+    console.log(`Best match: ${best.word}`)
     return { best: best.word, score: best.score };
 }

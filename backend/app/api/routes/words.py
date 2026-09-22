@@ -10,6 +10,7 @@ router = APIRouter()
 
 @router.post("/similarity", response_model=WordsOut)
 async def compute_similarity(payload: WordsIn):
+    print(payload)
     scores = await run_in_threadpool(
         embedding_service.compute_similarity, payload.words, payload.target
     )

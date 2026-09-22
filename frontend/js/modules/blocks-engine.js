@@ -803,7 +803,6 @@ export function startGame(){
 
         const candidates = grid.getBlocks().filter((block) => block.word).map((block) => block.word.toLowerCase()); // array of word
         if (candidates.length === 0) return;
-
         isAnimating = true;
 
         if (candidates.includes(wordInput)) {
@@ -828,7 +827,7 @@ export function startGame(){
                 console.error("[blocks-engine] fetchBestMatch fallita:", err.message);
                 return;
             }
-            const matchedBlock = grid.getBlocks().find((block) => block.word === best);
+            const matchedBlock = grid.getBlocks().find((block) => block.word && block.word.toLowerCase() === best);
             if (!matchedBlock) return;
 
             // 1. Everything but the matched group dims down, the group fades
