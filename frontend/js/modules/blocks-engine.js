@@ -61,7 +61,7 @@ export function startGame(){
                                  // as one clean settle rather than a slow crawl
     const MATERIALIZE_DURATION = 260 // ms, color crossfade / word fade-in
 
-    const DIM_DURATION = 800 // ms, fade in/out for the non-matched blocks
+    const DIM_DURATION = 1500 // ms, fade in/out for the non-matched blocks
     const DIM_ALPHA = 0.30   // how faint the non-matched blocks get while the match plays
 
     // Feedback shown on a block whose word was typed verbatim (already
@@ -538,7 +538,7 @@ export function startGame(){
             }
         }
         progressBar.style.setProperty('--progress', progressBarState + '%');
-    }, 1000)
+    }, 1500)
 
     enforceRemovability(grid, { repairBlock }) // inheritedColor()'s no-neighbor branch can mint an unreachable block
     draw()                // render again now that the grid actually has blocks
